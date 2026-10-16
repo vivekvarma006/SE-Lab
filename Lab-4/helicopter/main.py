@@ -3,7 +3,8 @@ Helicopter Game (Lab Starter)
 
 Run with:  python3 main.py
 
-Controls: Up/Down arrows to move, R to play again after a crash.
+Controls: Up/Down arrows to move, S to turn on the shield,
+R to play again after a crash.
 """
 
 import pygame

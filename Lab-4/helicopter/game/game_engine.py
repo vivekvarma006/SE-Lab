@@ -3,7 +3,8 @@ GameEngine: owns the helicopter and all obstacles.
 
 Each frame the helicopter is checked against every obstacle; touching
 either wall ends the game, and R starts a new one. Distance travelled
-is the score and goes up by the scroll speed every frame.
+is the score and goes up by the scroll speed every frame. S turns on a
+shield that absorbs exactly one hit and then switches off.
 """
 
 import random
@@ -31,6 +32,7 @@ class GameEngine:
         self.frames_until_spawn = 0
         self.game_over = False
         self.distance = 0   # in pixels scrolled
+        self.shield_active = False
 
     def distance_m(self):
         return self.distance // PIXELS_PER_METRE
@@ -50,6 +52,8 @@ class GameEngine:
     def handle_keydown(self, key):
         if key == pygame.K_r and self.game_over:
             self.reset()
+        elif key == pygame.K_s and not self.game_over:
+            self.shield_active = True
 
     def update(self):
         if self.game_over:
@@ -72,13 +76,20 @@ class GameEngine:
     def _check_collisions(self):
         heli_rect = self.helicopter.get_rect()
         for obstacle in self.obstacles:
-            if obstacle.collides_with(heli_rect):
+            if obstacle.absorbed or not obstacle.collides_with(heli_rect):
+                continue
+            if self.shield_active:
+                # shield takes this hit; ignore this wall from now on so the
+                # helicopter doesn't crash into it again on the next frame
+                self.shield_active = False
+                obstacle.absorbed = True
+            else:
                 self.game_over = True
                 return
 
     def draw(self, surface, font):
         from game import renderer
-        renderer.draw_scene(surface, self.helicopter, self.obstacles)
+        renderer.draw_scene(surface, self.helicopter, self.obstacles, self.shield_active)
         if self.game_over:
             renderer.draw_game_over(surface, font, [
                 "GAME OVER",
@@ -87,3 +98,7 @@ class GameEngine:
             ])
         else:
             renderer.draw_text(surface, font, f"Distance: {self.distance_m()} m", (10, 10))
+            if self.shield_active:
+                renderer.draw_text(surface, font, "Shield: ON", (10, 36), renderer.COLOR_SHIELD)
+            else:
+                renderer.draw_text(surface, font, "Shield: OFF (press S)", (10, 36))
