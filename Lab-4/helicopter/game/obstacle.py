@@ -29,3 +29,6 @@ class Obstacle:
     def get_bottom_rect(self):
         bottom_y = self.gap_y + self.gap_height / 2
         return pygame.Rect(int(self.x), int(bottom_y), self.wall_width, int(self.screen_height - bottom_y))
+
+    def collides_with(self, rect):
+        return rect.colliderect(self.get_top_rect()) or rect.colliderect(self.get_bottom_rect())
