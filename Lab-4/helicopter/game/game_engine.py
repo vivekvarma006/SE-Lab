@@ -2,7 +2,8 @@
 GameEngine: owns the helicopter and all obstacles.
 
 Each frame the helicopter is checked against every obstacle; touching
-either wall ends the game, and R starts a new one.
+either wall ends the game, and R starts a new one. Distance travelled
+is the score and goes up by the scroll speed every frame.
 """
 
 import random
@@ -17,6 +18,7 @@ SPAWN_INTERVAL_FRAMES = 90
 GAP_HEIGHT = 150
 WALL_WIDTH = 60
 SCROLL_SPEED = 3
+PIXELS_PER_METRE = 10
 
 
 class GameEngine:
@@ -28,6 +30,10 @@ class GameEngine:
         self.obstacles = []
         self.frames_until_spawn = 0
         self.game_over = False
+        self.distance = 0   # in pixels scrolled
+
+    def distance_m(self):
+        return self.distance // PIXELS_PER_METRE
 
     def _spawn_obstacle(self):
         margin = 60
@@ -50,6 +56,7 @@ class GameEngine:
             return
 
         self.helicopter.update(HEIGHT)
+        self.distance += SCROLL_SPEED
 
         self.frames_until_spawn -= 1
         if self.frames_until_spawn <= 0:
@@ -73,4 +80,10 @@ class GameEngine:
         from game import renderer
         renderer.draw_scene(surface, self.helicopter, self.obstacles)
         if self.game_over:
-            renderer.draw_game_over(surface, font, ["GAME OVER", "Press R to play again"])
+            renderer.draw_game_over(surface, font, [
+                "GAME OVER",
+                f"Distance: {self.distance_m()} m",
+                "Press R to play again",
+            ])
+        else:
+            renderer.draw_text(surface, font, f"Distance: {self.distance_m()} m", (10, 10))
