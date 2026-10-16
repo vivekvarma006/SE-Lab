@@ -6,6 +6,8 @@ held Up/Down keys.
 import pygame
 
 THRUST = 0.4
+MAX_SPEED = 8.0   # vy can never build up past this
+DRAG = 0.85       # fraction of speed kept each frame when no key is held
 
 
 class Helicopter:
@@ -17,17 +19,31 @@ class Helicopter:
         self.vy = 0.0
 
     def handle_input(self, keys_pressed):
-        if keys_pressed[pygame.K_UP]:
+        up = keys_pressed[pygame.K_UP]
+        down = keys_pressed[pygame.K_DOWN]
+        if up and not down:
+            # switching direction drops the old speed straight away
+            if self.vy > 0:
+                self.vy = 0.0
             self.vy -= THRUST
-        if keys_pressed[pygame.K_DOWN]:
+        elif down and not up:
+            if self.vy < 0:
+                self.vy = 0.0
             self.vy += THRUST
+        else:
+            self.vy *= DRAG
+        self.vy = max(-MAX_SPEED, min(MAX_SPEED, self.vy))
 
     def update(self, height_bound):
         self.y += self.vy
-        if self.y < 0:
-            self.y = 0
+        # y is the centre, so keep half the height away from each edge
+        half = self.height / 2
+        if self.y < half:
+            self.y = half
             self.vy = 0
-        # NOTE: no corresponding check against the bottom boundary
+        elif self.y > height_bound - half:
+            self.y = height_bound - half
+            self.vy = 0
 
     def get_rect(self):
         return pygame.Rect(
